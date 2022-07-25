@@ -23,9 +23,14 @@ csv_url = [ "https://raw.githubusercontent.com/dssg-pt/covid19pt-data/master/dat
           ]
 
 parser = argparse.ArgumentParser(description='Download DSSG files')
-parser.add_argument('path', type=str, help='path to where files will be stored')
+
+parser.add_argument('path',      type=str, help='path to where files will be stored')
+parser.add_argument('ecdc_host', type=str, help='path to the ECDC host')
+
 args = parser.parse_args()
+
 path_args = args.path
+ecdc_host = args.ecdc_host
 
 #descobrir se o path existe e simultamente que seja directório no sistema, e dar erro c.c
 if os.path.exists(path_args) is not True: 
@@ -43,6 +48,16 @@ else :
 
 time_path = str(datetime.date.today())
 
+# add the ECDC URL
+# we need this complementary file from ECDC because DSSG does not have "amostras" anymore
+
+ecdc_url = 'https://' + ecdc_host + '/covid19/testing/csv/data.csv'
+
+print('')
+print('ECDC url is', ecdc_url, '\n')
+
+csv_url.append(ecdc_url)
+
 # Downloading the csv file + giving name
 
 for url in csv_url:
@@ -50,7 +65,11 @@ for url in csv_url:
     name_path_csv = os.path.basename(url)
     name_path_split = name_path_csv.split('.')
     name_path = name_path_split[0]
-    file_name_path = name_path + '-' + time_path + '.csv'
+    # this is to avoid name conflict, if we need for ECDC files in the future we will need to review this
+    if 'ecdc' in url:
+        file_name_path = 'ecdc-' + name_path + '-' + time_path + '.csv'
+    else:
+        file_name_path = name_path + '-' + time_path + '.csv'
     print('saving ' + file_name_path)
     req = requests.get(url)
     url_content = req.content
